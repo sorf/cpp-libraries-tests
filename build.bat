@@ -1,10 +1,10 @@
 
 @echo off
 
-set CPP_FILE=hello.cpp
+set CPP_FILE=http_client_sync.cpp
 
 set MSVC_LIBS=libboost_system.lib
-set GCC_LIBS=-lboost_system
+set GCC_LIBS=-lboost_system -lws2_32
 
 set MSVC_CXXFLAGS_DEBUG=/DBOOST_ALL_NO_LIB /EHsc /Zi /Od /MDd
 set MSVC_CXXFLAGS_RELEASE=/DBOOST_ALL_NO_LIB /EHsc /Zi /O2 /MD
