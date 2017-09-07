@@ -59,7 +59,7 @@ int main(int argc, char** argv)
         boost::asio::connect(socket, lookup);
 
         // Set up an HTTP GET request message
-        http::request<http::string_body> req{http::verb::get, target, 11};
+        http::request<http::string_body> req{http::verb::get, target, 10};
         req.set(http::field::host, host);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
