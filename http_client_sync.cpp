@@ -88,7 +88,6 @@ int main(int argc, char** argv)
         std::cout << res << std::endl;
 
         // Gracefully close the socket
-        
         socket.shutdown(tcp::socket::shutdown_both, ec);
 
         // not_connected happens sometimes
