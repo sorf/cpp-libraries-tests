@@ -33,20 +33,23 @@ int main(int argc, char** argv)
     try
     {
         // Check command line arguments.
-        if(argc != 4)
+        if(argc != 4 && argc != 5)
         {
             std::cerr <<
-                "Usage: http-client-sync <host> <port> <target>\n" <<
+                "Usage: http-client-sync <host> <port> <target> [<HTTP version: 1.0 or 1.1(default)>]\n" <<
                 "Example:\n" <<
-                "    http-client-sync www.example.com 80 /\n";
+                "    http-client-sync www.example.com 80 /\n" <<
+                "    http-client-sync www.example.com 80 / 1.0\n";
             return EXIT_FAILURE;
         }
         auto const host = argv[1];
         auto const port = argv[2];
         auto const target = argv[3];
+        int version = argc == 5 && !std::strcmp("1.0", argv[4]) ? 10 : 11;
 
         // The io_service is required for all I/O
         boost::asio::io_service ios;
+        boost::system::error_code ec;
 
         // These objects perform our I/O
         tcp::resolver resolver{ios};
@@ -59,12 +62,18 @@ int main(int argc, char** argv)
         boost::asio::connect(socket, lookup);
 
         // Set up an HTTP GET request message
-        http::request<http::string_body> req{http::verb::get, target, 10};
+        http::request<http::string_body> req{http::verb::get, target, version};
         req.set(http::field::host, host);
         req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
         // Send the HTTP request to the remote host
-        http::write(socket, req);
+        http::write(socket, req, ec);
+        // write() will return error::end_of_stream when the connection
+        // should be closed to indicate the end of the message.
+        if(ec == http::error::end_of_stream)
+            socket.shutdown(tcp::socket::shutdown_send);
+        else if(ec)
+            throw boost::system::system_error{ec};
 
         // This buffer is used for reading and must be persisted
         boost::beast::flat_buffer buffer;
@@ -79,7 +88,7 @@ int main(int argc, char** argv)
         std::cout << res << std::endl;
 
         // Gracefully close the socket
-        boost::system::error_code ec;
+        
         socket.shutdown(tcp::socket::shutdown_both, ec);
 
         // not_connected happens sometimes
